@@ -3,11 +3,19 @@ package utils;
 import java.io.File;
 import java.util.Scanner;
 
+import javax.crypto.spec.SecretKeySpec;
+
 public class ciphersuiteConfig {
 	private String alg;
 	private String mode;
 	private String padding;
 	private String sessionkeysize;
+	private String IV;
+
+	public String getIV() {
+		return IV;
+	}
+
 	private String sessionkeyvalue;
 	private String MACKM;
 	private String MACKMSIZE;
@@ -15,6 +23,9 @@ public class ciphersuiteConfig {
 	private String MACKA;
 	private String MACKASIZE;
 	private String MACKAVALUE;
+	private SecretKeySpec sessionKey;
+	private SecretKeySpec macKAKey;
+	private SecretKeySpec macKMKey;
 
 	public ciphersuiteConfig() {
 		try {
@@ -24,14 +35,18 @@ public class ciphersuiteConfig {
 			alg = ciphersuite[0];
 			mode = ciphersuite[1];
 			padding = ciphersuite[2];
+			IV = sc.nextLine().split(": ")[1];
 			sessionkeysize = sc.nextLine().split(": ")[1];
 			sessionkeyvalue = sc.nextLine().split(": ")[1];
+			sessionKey = new SecretKeySpec(sessionkeyvalue.getBytes(), alg);
 			MACKM = sc.nextLine().split(": ")[1];
 			MACKMSIZE = sc.nextLine().split(": ")[1];
 			MACKMVALUE = sc.nextLine().split(": ")[1];
+			macKMKey = new SecretKeySpec(MACKMVALUE.getBytes(), MACKM);
 			MACKA = sc.nextLine().split(": ")[1];
 			MACKASIZE = sc.nextLine().split(": ")[1];
 			MACKAVALUE = sc.nextLine().split(": ")[1];
+			macKAKey = new SecretKeySpec(MACKAVALUE.getBytes(), MACKA);
 			sc.close();
 		} catch (Exception e) {
 			System.err.println(ciphersuiteConfig.class + ": constructor failed");
@@ -39,12 +54,25 @@ public class ciphersuiteConfig {
 
 	}
 
+	public SecretKeySpec getSessionKey() {
+		return sessionKey;
+	}
+
+	public SecretKeySpec getMacKAKey() {
+		return macKAKey;
+	}
+
+	public SecretKeySpec getMacKMKey() {
+		return macKMKey;
+	}
+
 	@Override
 	public String toString() {
 		return "ciphersuiteConfig [alg=" + alg + ", mode=" + mode + ", padding=" + padding + ", sessionkeysize="
-				+ sessionkeysize + ", sessionkeyvalue=" + sessionkeyvalue + ", MACKM=" + MACKM + ", MACKMSIZE="
-				+ MACKMSIZE + ", MACKMVALUE=" + MACKMVALUE + ", MACKA=" + MACKA + ", MACKASIZE=" + MACKASIZE
-				+ ", MACKAVALUE=" + MACKAVALUE + "]";
+				+ sessionkeysize + ", iv=" + IV + ", sessionkeyvalue=" + sessionkeyvalue + ", MACKM=" + MACKM
+				+ ", MACKMSIZE=" + MACKMSIZE + ", MACKMVALUE=" + MACKMVALUE + ", MACKA=" + MACKA + ", MACKASIZE="
+				+ MACKASIZE + ", MACKAVALUE=" + MACKAVALUE + ", sessionKey=" + sessionKey + ", macKAKey=" + macKAKey
+				+ ", macKMKey=" + macKMKey + "]";
 	}
 
 	public String getAlg() {

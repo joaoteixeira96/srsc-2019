@@ -8,6 +8,7 @@ import java.net.SocketException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Random;
 
 import javax.crypto.BadPaddingException;
@@ -20,38 +21,29 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class secDatagramSockets extends DatagramSocket {
-	int key = 0x0;
-	Key sharedKey; // TODO: Mudar para shared key
-	Key fastControlMACKey; // TODO: Mudar para shared key
-	Key MAC_Key;
+
+	private ciphersuiteConfig ciphersuite;
 
 	public secDatagramSockets() throws SocketException {
 		super();
-		key = 0x00;
-		sharedKey = new SecretKeySpec(new byte[2], "AES"); // TODO: Mudar para shared key
-		fastControlMACKey = new SecretKeySpec(new byte[2], "AES"); // TODO: Mudar para shared key
-		MAC_Key = new SecretKeySpec(new byte[2], "AES");
-		// TODO Auto-generated constructor stub
-
+		ciphersuite = new ciphersuiteConfig();
 	}
 
-	public void send(DatagramPacket datagram) {
+	public void send(DatagramPacket datagram) throws IOException {
 		Random random = new Random();
-		long id = random.nextLong();
-		long nonce = random.nextLong();
+		long id = 78151919;
+		long nonce = 9915469;
 		String message = id + nonce + new String(datagram.getData());
-		System.out.println("datagram content: " + new String(datagram.getData()));
+		String mac = "";
 		try {
-			System.out.println("message: " + message);
-			System.out.println(new String(createHashFromByteArray(message.getBytes())));
+			mac = new String(createHashFromByteArray(message.getBytes()));
 		} catch (Exception e) {
-
+			e.printStackTrace();
+			throw new IOException("hash failed");
 		}
-		// Pegar mensagem
-		// String message = encrypt();
-		// Encriptar
-		// Enviar
-
+		byte[] finalMessage = (message + mac).getBytes();
+		System.out.println(message + mac);
+		datagram.setData(finalMessage, 0, finalMessage.length);
 	}
 
 	private byte[] createHeader(byte versionRelease, byte payloadType, byte[] playloadSize) throws IOException {
@@ -71,7 +63,8 @@ public class secDatagramSockets extends DatagramSocket {
 
 		try (ByteArrayOutputStream messageOutputStream = new ByteArrayOutputStream()) {
 
-			byte[] enctryptedMessage = encryptMessageWithGivenKey(sharedKey, messageWithCheckSumAppended(message));
+			byte[] enctryptedMessage = encryptMessageWithGivenKey(ciphersuite.getSessionKey(),
+					messageWithCheckSumAppended(message));
 
 			messageOutputStream.write(enctryptedMessage);
 			messageOutputStream.write(createFastControlHashFromByteArray(enctryptedMessage));
@@ -104,17 +97,19 @@ public class secDatagramSockets extends DatagramSocket {
 	}
 
 	private byte[] createFastControlHashFromByteArray(byte[] message) throws Exception {
-		return hashMessage(message, fastControlMACKey);
+		return hashMessage(message, ciphersuite.getMacKAKey());
 	}
 
 	private byte[] createHashFromByteArray(byte[] message) throws Exception {
-		return hashMessage(message, MAC_Key);
+		return hashMessage(message, ciphersuite.getMacKMKey());
 	}
 
-	private byte[] hashMessage(byte[] message, Key key) throws Exception {
+	private byte[] hashMessage(byte[] message, SecretKeySpec key) throws Exception {
 		try {
-			Mac mac = Mac.getInstance("HmacSHA1");
-			mac.init(key);
+			Mac mac = Mac.getInstance(ciphersuite.getMACKM());
+			AlgorithmParameterSpec params = new IvParameterSpec(ciphersuite.getIV().getBytes());
+			mac.init(key, params);
+			mac.update(ciphersuite.getIV().getBytes());
 			return mac.doFinal(message);
 		} catch (Exception e) {
 			e.printStackTrace();
