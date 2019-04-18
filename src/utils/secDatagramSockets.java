@@ -1,8 +1,6 @@
 package utils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -10,7 +8,6 @@ import java.net.SocketException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -29,7 +26,7 @@ public class secDatagramSockets extends DatagramSocket {
 
 	public secDatagramSockets() throws SocketException {
 		super();
-		key = 0x0;
+		key = 0x00;
 		sharedKey = new SecretKeySpec(new byte[2], "AES"); // TODO: Mudar para shared key
 		fastControlMACKey = new SecretKeySpec(new byte[2], "AES"); // TODO: Mudar para shared key
 		MAC_Key = new SecretKeySpec(new byte[2], "AES");
@@ -41,13 +38,7 @@ public class secDatagramSockets extends DatagramSocket {
 		// String message = encrypt();
 		// Encriptar
 		// Enviar
-	}
 
-	public static String ciphersuitReader() throws FileNotFoundException {
-		File file = new File("ciphersuite.conf");
-		Scanner sc = new Scanner(file);
-
-		return sc.nextLine().split(": ")[1];
 	}
 
 	private byte[] createHeader(byte versionRelease, byte payloadType, byte[] playloadSize) throws IOException {

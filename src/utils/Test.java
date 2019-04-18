@@ -2,6 +2,8 @@ package utils;
 
 public class Test {
 	public static void main(String[] args) throws Exception {
-		System.out.println(secDatagramSockets.ciphersuitReader());
+		// System.out.println(secDatagramSockets.ciphersuitReader());
+		ciphersuiteConfig cs = new ciphersuiteConfig();
+		System.out.println(cs.toString());
 	}
 }
