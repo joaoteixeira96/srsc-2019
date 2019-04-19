@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -20,11 +21,11 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-public class secDatagramSockets extends DatagramSocket {
+public class secDatagramSocket extends DatagramSocket {
 
 	private ciphersuiteConfig ciphersuite;
 
-	public secDatagramSockets() throws SocketException {
+	public secDatagramSocket() throws SocketException {
 		super();
 		ciphersuite = new ciphersuiteConfig();
 	}
@@ -41,9 +42,24 @@ public class secDatagramSockets extends DatagramSocket {
 			e.printStackTrace();
 			throw new IOException("hash failed");
 		}
-		byte[] finalMessage = (message + mac).getBytes();
-		System.out.println(message + mac);
+		String send = message + mac;
+		byte[] finalMessage = send.getBytes();
+		String received = new String(send.getBytes());
+		System.out.println("Sent: " + send);
 		datagram.setData(finalMessage, 0, finalMessage.length);
+		DatagramSocket s = new DatagramSocket();
+		InetSocketAddress addr2 = new InetSocketAddress("localhost", 1236);
+		DatagramSocket inSocket = new DatagramSocket(addr2);
+		byte[] buf = new byte[finalMessage.length];
+		DatagramPacket in = new DatagramPacket(buf, buf.length);
+		s.send(datagram);
+		inSocket.receive(in);
+		received = new String(in.getData());
+		System.out.println("Received: " + received);
+		System.out.println("Equal: " + received.equals(send));
+
+		inSocket.close();
+		s.close();
 	}
 
 	private byte[] createHeader(byte versionRelease, byte payloadType, byte[] playloadSize) throws IOException {
