@@ -3,7 +3,7 @@ package utils;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 
-public class Test {
+public class TestSend {
 	public static void main(String[] args) throws Exception {
 		// System.out.println(secDatagramSockets.ciphersuitReader());
 		ciphersuiteConfig cs = new ciphersuiteConfig();
@@ -20,6 +20,9 @@ public class Test {
 		/*
 		 * If listen a remote unicast server uncomment the following line
 		 */
+//		long x = 1234567L;
+//		System.out.println(BytesUtils.byte2long(BytesUtils.long2byte(x)));
+		
 
 	}
 }

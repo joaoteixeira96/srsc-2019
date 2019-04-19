@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -24,42 +24,40 @@ import javax.crypto.spec.SecretKeySpec;
 public class secDatagramSocket extends DatagramSocket {
 
 	private ciphersuiteConfig ciphersuite;
+	private SocketAddress socketAddress;
+
+	public secDatagramSocket(SocketAddress socketAddress) throws SocketException {
+		ciphersuite = new ciphersuiteConfig();
+		this.socketAddress = socketAddress;
+	}
 
 	public secDatagramSocket() throws SocketException {
 		super();
 		ciphersuite = new ciphersuiteConfig();
+
 	}
 
 	public void send(DatagramPacket datagram) throws IOException {
 		Random random = new Random();
-		long id = 78151919;
-		long nonce = 9915469;
-		String message = id + nonce + new String(datagram.getData());
-		String mac = "";
+		byte[] id = BytesUtils.long2byte(1234567L);
+		byte[] nonce = BytesUtils.long2byte(9915469L);
+		ByteArrayOutputStream array = new ByteArrayOutputStream();
+		array.write(id);
+		array.write(nonce);
+		array.write(datagram.getData());
+		byte[] message = array.toByteArray();
+		byte[] mac;
 		try {
-			mac = new String(createHashFromByteArray(message.getBytes()));
+			mac = createHashFromByteArray(message);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IOException("hash failed");
 		}
-		String send = message + mac;
-		byte[] finalMessage = send.getBytes();
-		String received = new String(send.getBytes());
-		System.out.println("Sent: " + send);
+		array.write(mac);
+		byte[] finalMessage = array.toByteArray();
 		datagram.setData(finalMessage, 0, finalMessage.length);
 		DatagramSocket s = new DatagramSocket();
-		InetSocketAddress addr2 = new InetSocketAddress("localhost", 1236);
-		DatagramSocket inSocket = new DatagramSocket(addr2);
-		byte[] buf = new byte[finalMessage.length];
-		DatagramPacket in = new DatagramPacket(buf, buf.length);
 		s.send(datagram);
-		inSocket.receive(in);
-		received = new String(in.getData());
-		System.out.println("Received: " + received);
-		System.out.println("Equal: " + received.equals(send));
-
-		inSocket.close();
-		s.close();
 	}
 
 	private byte[] createHeader(byte versionRelease, byte payloadType, byte[] playloadSize) throws IOException {
@@ -159,8 +157,24 @@ public class secDatagramSocket extends DatagramSocket {
 		return cipherText;
 	}
 
-	public DatagramPacket receive() {
-		return null;
+	public void receive(DatagramPacket datagram) throws IOException {
+		DatagramSocket inSocket = new DatagramSocket(socketAddress);
+		byte[] buffer = new byte[4 * 1024];
+		DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
+		inSocket.receive(inPacket);
+		byte[] message = inPacket.getData();
+
+		byte[] id2 = new byte[8];
+		System.arraycopy(message, 0, id2, 0, 8);
+		byte[] nonce2 = new byte[8];
+		System.arraycopy(message, 8, nonce2, 0, 8);
+		System.out.println("ID: " + BytesUtils.byte2long(id2));
+		System.out.println("Nonce: " + BytesUtils.byte2long(nonce2));
+		byte[] message2 = new byte[message.length - 48];
+		System.arraycopy(message, 16, message2, 0, 20);
+		System.out.println("Sent: " + new String(message2));
+		inSocket.close();
+		datagram.setData(message2);
 	}
 
 }
