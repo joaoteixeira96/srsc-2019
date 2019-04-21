@@ -58,7 +58,7 @@ class hjUDPproxy {
 		// ms.joinGroup(InetAddress.getByName("239.9.9.9"));
 
 		DatagramSocket outSocket = new DatagramSocket();
-		byte[] buffer = new byte[4 * 1024];
+		byte[] buffer = new byte[4 * 1024 + 6];
 		while (true) {
 			DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
 			/*
@@ -71,7 +71,7 @@ class hjUDPproxy {
 			 */
 			// ms.receive(inPacket); // if remote is multicast
 
-			System.out.print("*");
+			System.out.println(inPacket.getData());
 			for (SocketAddress outSocketAddress : outSocketAddressSet) {
 				outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
 			}

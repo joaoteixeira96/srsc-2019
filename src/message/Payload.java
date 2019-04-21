@@ -67,7 +67,7 @@ public class Payload {
 		return true; // TODO
 	}
 
-	public byte[] processPayload(byte[] message, int messageLength)
+	public byte[] processPayload(byte[] message, short messageLength)
 			throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException,
 			NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException {
 		genericBlockCipher.decrypt(message);

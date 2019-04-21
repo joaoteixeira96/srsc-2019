@@ -5,22 +5,20 @@ import java.nio.ByteOrder;
 
 public class Header {
 
-	private String versionRelease;
-	private String payloadType;
+	private byte[] versionRelease;
+	private byte[] payloadType;
 
-	public Header(String versionRelease, String payloadType) {
+	public Header(byte[] versionRelease, byte[] payloadType) {
 		super();
 		this.versionRelease = versionRelease;
 		this.payloadType = payloadType;
 	}
 
-	public String getVersionRelease() {
+	public byte[] getVersionRelease() {
 		return versionRelease;
 	}
 
 	public byte[] generateHeader(byte[] message) {
-		byte[] versionReleaseBytes = versionRelease.getBytes();
-		byte[] payloadTypeBytes = payloadType.getBytes();
 		byte[] separator = { 0x00 };
 		byte[] header = new byte[6];
 		short messageSize = (short) message.length;
@@ -28,9 +26,9 @@ public class Header {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putShort(messageSize);
 		byte[] size = buffer.array();
-		System.arraycopy(versionReleaseBytes, 0, header, 0, 1);
+		System.arraycopy(versionRelease, 0, header, 0, 1);
 		System.arraycopy(separator, 0, header, 1, 1);
-		System.arraycopy(payloadTypeBytes, 0, header, 2, 1);
+		System.arraycopy(payloadType, 0, header, 2, 1);
 		System.arraycopy(separator, 0, header, 3, 1);
 		System.arraycopy(size, 0, header, 4, 2);
 		System.out.println("send: " + header[4]);
@@ -47,15 +45,15 @@ public class Header {
 		return buffer.getShort(0);
 	}
 
-	public void setVersionRelease(String versionRelease) {
+	public void setVersionRelease(byte[] versionRelease) {
 		this.versionRelease = versionRelease;
 	}
 
-	public String getPayloadType() {
+	public byte[] getPayloadType() {
 		return payloadType;
 	}
 
-	public void setPayloadType(String payloadType) {
+	public void setPayloadType(byte[] payloadType) {
 		this.payloadType = payloadType;
 	}
 

@@ -27,7 +27,7 @@ class hjStreamServer {
 		int count = 0;
 		long time;
 		DataInputStream g = new DataInputStream(new FileInputStream(args[0]));
-		byte[] buff = new byte[65000];
+		byte[] buff = new byte[64992];
 		// MulticastSocket s = new MulticastSocket();
 		secDatagramSocket s = new secDatagramSocket();
 		InetSocketAddress addr = new InetSocketAddress(args[1], Integer.parseInt(args[2]));
@@ -47,9 +47,9 @@ class hjStreamServer {
 			long t = System.nanoTime();
 			Thread.sleep(Math.max(0, ((time - q0) - (t - t0)) / 1000000));
 			s.send(p);
-			System.out.print(".");
+			System.out.print(p.getData());
 		}
-
+		s.close();
 		System.out.println("DONE! packets sent: " + count);
 	}
 
