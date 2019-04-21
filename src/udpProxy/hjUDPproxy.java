@@ -26,6 +26,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import utils.secDatagramSocket;
+
 class hjUDPproxy {
 	public static void main(String[] args) throws Exception {
 		InputStream inputStream = hjUDPproxy.class.getResourceAsStream("config.properties");
@@ -46,7 +48,7 @@ class hjUDPproxy {
 		 * If listen a remote unicast server taje the remote config uncomment the
 		 * following line
 		 */
-		DatagramSocket inSocket = new DatagramSocket(inSocketAddress);
+		secDatagramSocket inSocket = new secDatagramSocket(inSocketAddress);
 
 		/*
 		 * If listen a remote multicast server in 239.9.9.9 port 9999 uncomment the

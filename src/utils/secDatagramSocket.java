@@ -6,11 +6,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
-import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -21,14 +22,18 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import message.Payload;
+
 public class secDatagramSocket extends DatagramSocket {
 
 	private ciphersuiteConfig ciphersuite;
 	private SocketAddress socketAddress;
+	private Payload payload;
 
 	public secDatagramSocket(SocketAddress socketAddress) throws SocketException {
 		ciphersuite = new ciphersuiteConfig();
 		this.socketAddress = socketAddress;
+		payload = new Payload(123456L, 9999L, ciphersuite);
 	}
 
 	public secDatagramSocket() throws SocketException {
@@ -38,23 +43,11 @@ public class secDatagramSocket extends DatagramSocket {
 	}
 
 	public void send(DatagramPacket datagram) throws IOException {
-		Random random = new Random();
-		byte[] id = BytesUtils.long2byte(1234567L);
-		byte[] nonce = BytesUtils.long2byte(9915469L);
-		ByteArrayOutputStream array = new ByteArrayOutputStream();
-		array.write(id);
-		array.write(nonce);
-		array.write(datagram.getData());
-		byte[] message = array.toByteArray();
-		byte[] mac;
-		try {
-			mac = createHashFromByteArray(message);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new IOException("hash failed");
-		}
-		array.write(mac);
-		byte[] finalMessage = array.toByteArray();
+		byte[] finalMessagePayload = payload.createPayload(datagram.getData());
+		byte[] finalMessageHeader = new byte[8];// TODO Header
+		byte[] finalMessage = new byte[finalMessageHeader.length + finalMessagePayload.length];
+		System.arraycopy(finalMessageHeader, 0, finalMessage, 0, finalMessageHeader.length);
+		System.arraycopy(finalMessagePayload, 0, finalMessage, finalMessageHeader.length, finalMessagePayload.length);
 		datagram.setData(finalMessage, 0, finalMessage.length);
 		DatagramSocket s = new DatagramSocket();
 		s.send(datagram);
@@ -159,22 +152,26 @@ public class secDatagramSocket extends DatagramSocket {
 
 	public void receive(DatagramPacket datagram) throws IOException {
 		DatagramSocket inSocket = new DatagramSocket(socketAddress);
-		byte[] buffer = new byte[4 * 1024];
+		byte[] buffer = new byte[64];
 		DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
 		inSocket.receive(inPacket);
-		byte[] message = inPacket.getData();
-
-		byte[] id2 = new byte[8];
-		System.arraycopy(message, 0, id2, 0, 8);
-		byte[] nonce2 = new byte[8];
-		System.arraycopy(message, 8, nonce2, 0, 8);
-		System.out.println("ID: " + BytesUtils.byte2long(id2));
-		System.out.println("Nonce: " + BytesUtils.byte2long(nonce2));
-		byte[] message2 = new byte[message.length - 48];
-		System.arraycopy(message, 16, message2, 0, 20);
-		System.out.println("Sent: " + new String(message2));
-		inSocket.close();
-		datagram.setData(message2);
+		byte[] message;
+		try {
+			message = inPacket.getData();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new IOException("receive failed");
+		}
+		byte[] header = new byte[8]; // TODO: Usar class Header
+		byte[] message2;
+		try {
+			message2 = payload.processPayload(message, 8);
+			datagram.setData(message2);
+		} catch (InvalidKeyException | ShortBufferException | IllegalBlockSizeException | BadPaddingException
+				| NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e) {
+			e.printStackTrace();
+			datagram.setData(new byte[0]);
+		}
 	}
 
 }
