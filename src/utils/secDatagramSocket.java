@@ -15,7 +15,6 @@ public class secDatagramSocket extends DatagramSocket {
 	private ciphersuiteConfig ciphersuite;
 	private Payload payload;
 	private Header header;
-	private int messageLength;
 
 	public secDatagramSocket(SocketAddress socketAddress) throws SocketException {
 		super(socketAddress);
@@ -38,9 +37,7 @@ public class secDatagramSocket extends DatagramSocket {
 	public void send(DatagramPacket datagram) throws IOException {
 		byte[] fullMessage = datagram.getData();
 		byte[] shortMessage = Arrays.copyOfRange(fullMessage, 0, datagram.getLength());
-
-//		System.out.println("message size: " + message.length);
-//		System.out.println("data size: " + datagram.getData().length);
+//		System.out.println("Message sent: " + Utils.toHex(shortMessage) + "Bytes: " + shortMessage.length);
 		byte[] finalMessagePayload = payload.createPayload(shortMessage);
 //		byte[] finalMessageHeader = header.generateHeader(shortMessage);
 //		byte[] finalMessage = new byte[finalMessageHeader.length + finalMessagePayload.length];
@@ -48,7 +45,6 @@ public class secDatagramSocket extends DatagramSocket {
 //		System.arraycopy(finalMessagePayload, 0, finalMessage, finalMessageHeader.length, finalMessagePayload.length);
 //		datagram.setData(finalMessagePayload, 0, finalMessagePayload.length);
 		datagram.setData(finalMessagePayload);
-		messageLength = finalMessagePayload.length;
 		super.send(datagram);
 	}
 
@@ -66,7 +62,7 @@ public class secDatagramSocket extends DatagramSocket {
 //			int plaintTextLength = this.header.getMessageLength(header);
 //			System.out.println("plaintTextLength: " + plaintTextLength);
 			genericBlockCipher genericBlockCipher = new genericBlockCipher(ciphersuite);
-			byte[] decryptedMessage = genericBlockCipher.decrypt(shortMessage, messageLength);
+			byte[] decryptedMessage = genericBlockCipher.decrypt(shortMessage, shortMessage.length);
 //			byte[] finalMessage = new byte[plaintTextLength];
 //			System.arraycopy(decryptedMessage, 0, finalMessage, 0, plaintTextLength);
 			datagram.setData(decryptedMessage);

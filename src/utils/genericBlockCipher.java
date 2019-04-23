@@ -4,6 +4,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -77,8 +78,8 @@ public class genericBlockCipher {
 		int ptLength = cipher.update(encryptedMessage, 0, encryptedMessage.length, plainText, 0);
 		ptLength += cipher.doFinal(plainText, ptLength);
 //		System.out.println("ptLength: " + ptLength);
-
+		byte[] shortMessage = Arrays.copyOfRange(plainText, 0, ptLength);
 //		System.out.println("Plaintext M in decrypt Method: " + Utils.toHex(plainText, ptLength) + " bytes: " + ptLength);
-		return plainText;
+		return shortMessage;
 	}
 }
