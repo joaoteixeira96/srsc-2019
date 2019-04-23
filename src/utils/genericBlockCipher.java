@@ -42,16 +42,17 @@ public class genericBlockCipher {
 //		System.out.println("plaintext M in encrypt Method: " + Utils.toHex(input) + "Bytes: " + input.length);
 
 		SecretKeySpec key = new SecretKeySpec(keyBytes, method);
-		IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes());
+		IvParameterSpec ivSpec = new IvParameterSpec(new byte[16]);
 		Cipher cipher = Cipher.getInstance(method + "/" + mode + "/" + padding, "SunJCE");
 
 //		System.out.println("key   : " + Utils.toHex(keyBytes));
 //		System.out.println("input : " + Utils.toHex(input));
 		// encryption
 		cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
-		byte[] cipherText = new byte[cipher.getOutputSize(input.length)];
+		byte[] cipherText = new byte[cipher.getOutputSize(input.length + iv.length())];
 //		System.out.println(cipher.getOutputSize(input.length));
-		int ctLength = cipher.update(input, 0, input.length, cipherText, 0);
+		int ctLength = cipher.update(iv.getBytes(), 0, iv.length(), cipherText, 0);
+		ctLength += cipher.update(input, 0, input.length, cipherText, ctLength);
 		ctLength += cipher.doFinal(cipherText, ctLength);
 
 //		System.out.println("cipher M in encrypt Method: " + Utils.toHex(cipherText, ctLength) + " bytes: " + ctLength);
@@ -67,18 +68,20 @@ public class genericBlockCipher {
 		byte[] keyBytes = key.getEncoded();
 
 		SecretKeySpec key = new SecretKeySpec(keyBytes, method);
-		IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes());
+		IvParameterSpec ivSpec = new IvParameterSpec(new byte[16]);
 		Cipher cipher = Cipher.getInstance(method + "/" + mode + "/" + padding, "SunJCE");
 
 //		System.out.println("key   : " + Utils.toHex(keyBytes));
 
 		// decryption
 		cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
-		byte[] plainText = new byte[cipher.getOutputSize(encryptedMessage.length)];
-		int ptLength = cipher.update(encryptedMessage, 0, encryptedMessage.length, plainText, 0);
-		ptLength += cipher.doFinal(plainText, ptLength);
-//		System.out.println("ptLength: " + ptLength);
-		byte[] shortMessage = Arrays.copyOfRange(plainText, 0, ptLength);
+		byte[] buf = new byte[cipher.getOutputSize(encryptedMessage.length)];
+		int ptLength = cipher.update(encryptedMessage, 0, encryptedMessage.length, buf, 0);
+		ptLength += cipher.doFinal(buf, ptLength);
+
+		byte[] plainText = new byte[ptLength - iv.length()];
+		System.arraycopy(buf, iv.length(), plainText, 0, plainText.length);
+		byte[] shortMessage = Arrays.copyOfRange(plainText, 0, ptLength - iv.length());
 //		System.out.println("Plaintext M in decrypt Method: " + Utils.toHex(plainText, ptLength) + " bytes: " + ptLength);
 		return shortMessage;
 	}
