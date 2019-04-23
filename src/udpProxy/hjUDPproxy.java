@@ -26,6 +26,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import utils.Utils;
 import utils.secDatagramSocket;
 
 class hjUDPproxy {
@@ -71,9 +72,9 @@ class hjUDPproxy {
 			 */
 			// ms.receive(inPacket); // if remote is multicast
 
-			System.out.println(inPacket.getData());
+			System.out.println("Packet Received: " + Utils.toHex(inPacket.getData()));
 			for (SocketAddress outSocketAddress : outSocketAddressSet) {
-				outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
+				outSocket.send(new DatagramPacket(inPacket.getData(), inPacket.getLength(), outSocketAddress));
 			}
 		}
 	}
