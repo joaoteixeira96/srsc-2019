@@ -28,10 +28,11 @@ class hjStreamServer {
 		int count = 0;
 		long time;
 		DataInputStream g = new DataInputStream(new FileInputStream(args[0]));
-
+		byte[] buff = new byte[65000];
 		// MulticastSocket s = new MulticastSocket();
 		secDatagramSocket s = new secDatagramSocket();
 		InetSocketAddress addr = new InetSocketAddress(args[1], Integer.parseInt(args[2]));
+		DatagramPacket p = new DatagramPacket(buff, buff.length, addr);
 		long t0 = System.nanoTime(); // tempo de referencia para este processo
 		long q0 = 0;
 
@@ -41,15 +42,14 @@ class hjStreamServer {
 			if (count == 0)
 				q0 = time; // tempo de referencia no stream
 			count += 1;
-			byte[] buff = new byte[size];
-			DatagramPacket p = new DatagramPacket(buff, buff.length);
 			g.readFully(buff, 0, size);
 			p.setData(buff, 0, size);
 			p.setSocketAddress(addr);
 			long t = System.nanoTime();
 			Thread.sleep(Math.max(0, ((time - q0) - (t - t0)) / 1000000));
 			s.send(p);
-			System.out.println("Packet Sent: " + Utils.toHex(p.getData()));
+
+			System.out.println("Packet Sent: " + Utils.toHex(p.getData()) + "Bytes: " + p.getLength());
 		}
 		s.close();
 		System.out.println("DONE! packets sent: " + count);

@@ -31,12 +31,12 @@ public class Header {
 		System.arraycopy(payloadType, 0, header, 2, 1);
 		System.arraycopy(separator, 0, header, 3, 1);
 		System.arraycopy(size, 0, header, 4, 2);
-		System.out.println("send: " + header[4]);
+//		System.out.println("send: " + header[4]);
 		return header;
 	}
 
 	public short getMessageLength(byte[] header) {
-		System.out.println("Receive:" + header[4]);
+//		System.out.println("Receive:" + header[4]);
 		byte[] messageSize = new byte[2];
 		System.arraycopy(header, 4, messageSize, 0, 2);
 		ByteBuffer buffer = ByteBuffer.allocate(2);

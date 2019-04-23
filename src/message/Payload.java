@@ -2,6 +2,7 @@ package message;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -12,6 +13,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
 import utils.BytesUtils;
+import utils.Utils;
 import utils.ciphersuiteConfig;
 import utils.genericBlockCipher;
 import utils.genericMAC;
@@ -44,13 +46,16 @@ public class Payload {
 		array.write(getID());
 		array.write(getNonce());
 		array.write(message);
+		System.out.println("ID :" + Utils.toHex(getID()));
+		System.out.println("Nonce: " + Utils.toHex(getNonce()));
+		System.out.println("M: " + Utils.toHex(message));
 		return array.toByteArray();
 	}
 
 	public byte[] createPayload(byte[] message) throws IOException {
 		try {
-			byte[] finalMessage = genericBlockCipher
-					.encrypt(genericMac.generateMessageWithMacAppended(messageToApplyMac(message)));
+			byte[] finalMessage = genericBlockCipher.encrypt(message);
+			// genericMac.generateMessageWithMacAppended(messageToApplyMac(
 			nonce++;
 			return finalMessage;
 		} catch (Exception e) {
@@ -67,10 +72,10 @@ public class Payload {
 		return true; // TODO
 	}
 
-	public byte[] processPayload(byte[] message, short messageLength)
-			throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException,
-			NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException {
-		genericBlockCipher.decrypt(message);
+	public byte[] processPayload(byte[] message, short messageLength) throws InvalidKeyException, ShortBufferException,
+			IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException,
+			NoSuchPaddingException, IOException, InvalidAlgorithmParameterException {
+		genericBlockCipher.decrypt(message, messageLength);
 		byte[] idReceived = new byte[8];
 		System.arraycopy(message, 0, id, 0, 8);
 		if (!checkID(BytesUtils.byte2long(idReceived)))
@@ -80,7 +85,7 @@ public class Payload {
 		if (!checkNonce(BytesUtils.byte2long(nonceReceived)))
 			return new byte[1];
 
-		System.out.println("TamanhoMensagem: " + message.length);
+//		System.out.println("TamanhoMensagem: " + message.length);
 		byte[] messageToHash = new byte[messageLength + 16];
 		System.arraycopy(message, 0, messageToHash, 0, 16 + messageLength);
 		byte[] mac = new byte[16];

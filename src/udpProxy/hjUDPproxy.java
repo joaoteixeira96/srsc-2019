@@ -50,7 +50,6 @@ class hjUDPproxy {
 		 * following line
 		 */
 		secDatagramSocket inSocket = new secDatagramSocket(inSocketAddress);
-
 		/*
 		 * If listen a remote multicast server in 239.9.9.9 port 9999 uncomment the
 		 * following two lines
@@ -59,19 +58,18 @@ class hjUDPproxy {
 		// ms.joinGroup(InetAddress.getByName("239.9.9.9"));
 
 		DatagramSocket outSocket = new DatagramSocket();
-		byte[] buffer = new byte[4 * 1024 + 6];
+		byte[] buffer = new byte[4 * 1024];
 		while (true) {
 			DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
 			/*
 			 * If listen a remote unicast server uncomment the following line
 			 */
 			inSocket.receive(inPacket); // if remote is unicast
-
+//			System.out.println("inPacketLength: " + inPacket.getLength());
 			/*
 			 * If listen a remote multcast server uncomment the following line
 			 */
 			// ms.receive(inPacket); // if remote is multicast
-
 			System.out.println("Packet Received: " + Utils.toHex(inPacket.getData()));
 			for (SocketAddress outSocketAddress : outSocketAddressSet) {
 				outSocket.send(new DatagramPacket(inPacket.getData(), inPacket.getLength(), outSocketAddress));
