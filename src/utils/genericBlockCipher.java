@@ -19,15 +19,17 @@ public class genericBlockCipher {
 	private String method;
 	private String mode;
 	private String padding;
+	private String ciphersuite;
 	private String iv;
 
-	public genericBlockCipher(ciphersuiteConfig ciphersuite) {
+	public genericBlockCipher(ciphersuiteConfig ciphersuiteConfig) {
 		super();
-		this.key = ciphersuite.getSessionKey();
-		this.method = ciphersuite.getAlg();
-		this.mode = ciphersuite.getMode();
-		this.padding = ciphersuite.getPadding();
-		this.iv = ciphersuite.getIV();
+		this.ciphersuite = ciphersuiteConfig.getCiphersuite();
+		this.key = ciphersuiteConfig.getSessionKey();
+		method = ciphersuite.split("/")[0];
+		mode = ciphersuite.split("/")[1];
+		padding = ciphersuite.split("/")[2];
+		this.iv = ciphersuiteConfig.getIV();
 	}
 
 	public byte[] encrypt(byte[] input) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException,

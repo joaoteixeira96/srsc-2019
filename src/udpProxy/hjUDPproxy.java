@@ -26,7 +26,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import utils.Utils;
 import utils.secDatagramSocket;
 
 class hjUDPproxy {
@@ -70,8 +69,7 @@ class hjUDPproxy {
 			 * If listen a remote multcast server uncomment the following line
 			 */
 			// ms.receive(inPacket); // if remote is multicast
-			System.out
-					.println("Packet Received: " + Utils.toHex(inPacket.getData()) + "Bytes: " + inPacket.getLength());
+//			System.out.println("Packet Received: " + Utils.toHex(inPacket.getData()) + "Bytes: " + inPacket.getLength());
 			for (SocketAddress outSocketAddress : outSocketAddressSet) {
 				outSocket.send(new DatagramPacket(inPacket.getData(), inPacket.getLength(), outSocketAddress));
 			}
