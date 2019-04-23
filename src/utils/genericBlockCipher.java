@@ -36,7 +36,7 @@ public class genericBlockCipher {
 
 		byte[] keyBytes = key.getEncoded();
 
-		System.out.println("plaintext M in encrypt Method: " + Utils.toHex(input) + "Bytes: " + input.length);
+//		System.out.println("plaintext M in encrypt Method: " + Utils.toHex(input) + "Bytes: " + input.length);
 
 		SecretKeySpec key = new SecretKeySpec(keyBytes, method);
 		IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes());
@@ -47,11 +47,11 @@ public class genericBlockCipher {
 		// encryption
 		cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 		byte[] cipherText = new byte[cipher.getOutputSize(input.length)];
-		System.out.println(cipher.getOutputSize(input.length));
+//		System.out.println(cipher.getOutputSize(input.length));
 		int ctLength = cipher.update(input, 0, input.length, cipherText, 0);
 		ctLength += cipher.doFinal(cipherText, ctLength);
 
-		System.out.println("cipher M in encrypt Method: " + Utils.toHex(cipherText, ctLength) + " bytes: " + ctLength);
+//		System.out.println("cipher M in encrypt Method: " + Utils.toHex(cipherText, ctLength) + " bytes: " + ctLength);
 
 		return cipherText;
 
@@ -60,8 +60,7 @@ public class genericBlockCipher {
 	public byte[] decrypt(byte[] encryptedMessage, int plaintextLength) throws ShortBufferException,
 			IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException {
-		System.out.println(
-				"Cipher M in decrypt Method: " + Utils.toHex(encryptedMessage) + " bytes: " + encryptedMessage.length);
+//		System.out.println("Cipher M in decrypt Method: " + Utils.toHex(encryptedMessage) + " bytes: " + encryptedMessage.length);
 		byte[] keyBytes = key.getEncoded();
 
 		SecretKeySpec key = new SecretKeySpec(keyBytes, method);
@@ -75,10 +74,9 @@ public class genericBlockCipher {
 		byte[] plainText = new byte[cipher.getOutputSize(encryptedMessage.length)];
 		int ptLength = cipher.update(encryptedMessage, 0, encryptedMessage.length, plainText, 0);
 		ptLength += cipher.doFinal(plainText, ptLength);
-		System.out.println("ptLength: " + ptLength);
+//		System.out.println("ptLength: " + ptLength);
 
-		System.out
-				.println("Plaintext M in decrypt Method: " + Utils.toHex(plainText, ptLength) + " bytes: " + ptLength);
+//		System.out.println("Plaintext M in decrypt Method: " + Utils.toHex(plainText, ptLength) + " bytes: " + ptLength);
 		return plainText;
 	}
 }

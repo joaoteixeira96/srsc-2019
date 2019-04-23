@@ -25,7 +25,7 @@ public class Header {
 		ByteBuffer buffer = ByteBuffer.allocate(2);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putShort(messageSize);
-		byte[] size = buffer.array();
+		short size = (short) message.length;
 		System.arraycopy(versionRelease, 0, header, 0, 1);
 		System.arraycopy(separator, 0, header, 1, 1);
 		System.arraycopy(payloadType, 0, header, 2, 1);

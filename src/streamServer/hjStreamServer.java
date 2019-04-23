@@ -10,10 +10,10 @@ package streamServer;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 
 import utils.Utils;
-import utils.secDatagramSocket;
 
 class hjStreamServer {
 
@@ -30,7 +30,7 @@ class hjStreamServer {
 		DataInputStream g = new DataInputStream(new FileInputStream(args[0]));
 		byte[] buff = new byte[65000];
 		// MulticastSocket s = new MulticastSocket();
-		secDatagramSocket s = new secDatagramSocket();
+		DatagramSocket s = new DatagramSocket();
 		InetSocketAddress addr = new InetSocketAddress(args[1], Integer.parseInt(args[2]));
 		DatagramPacket p = new DatagramPacket(buff, buff.length, addr);
 		long t0 = System.nanoTime(); // tempo de referencia para este processo
