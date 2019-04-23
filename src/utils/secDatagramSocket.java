@@ -6,6 +6,8 @@ import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 
+import org.bouncycastle.util.Arrays;
+
 import message.Header;
 import message.Payload;
 
@@ -35,11 +37,12 @@ public class secDatagramSocket extends DatagramSocket {
 	}
 
 	public void send(DatagramPacket datagram) throws IOException {
-		byte[] message = datagram.getData();
-		System.out.println("message size: " + message.length);
-		System.out.println("data size: " + datagram.getData().length);
-		byte[] finalMessagePayload = payload.createPayload(message);
-		byte[] finalMessageHeader = header.generateHeader(message);
+		byte[] fullMessage = datagram.getData();
+		byte[] shortMessage = Arrays.copyOfRange(fullMessage, 0, datagram.getLength());
+//		System.out.println("message size: " + message.length);
+//		System.out.println("data size: " + datagram.getData().length);
+		byte[] finalMessagePayload = payload.createPayload(shortMessage);
+		byte[] finalMessageHeader = header.generateHeader(shortMessage);
 		byte[] finalMessage = new byte[finalMessageHeader.length + finalMessagePayload.length];
 		System.arraycopy(finalMessageHeader, 0, finalMessage, 0, finalMessageHeader.length);
 		System.arraycopy(finalMessagePayload, 0, finalMessage, finalMessageHeader.length, finalMessagePayload.length);
