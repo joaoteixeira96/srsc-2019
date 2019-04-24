@@ -13,14 +13,13 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
 import utils.BytesUtils;
-import utils.Utils;
 import utils.ciphersuiteConfig;
 import utils.genericBlockCipher;
 import utils.genericMAC;
 
 public class Payload {
 
-	private long id;
+	private final long id;
 	private long nonce;
 	private genericBlockCipher genericBlockCipher;
 	private genericMAC genericMac;
@@ -41,22 +40,23 @@ public class Payload {
 		return BytesUtils.long2byte(nonce);
 	}
 
-	private byte[] messageToApplyMac(byte[] message) throws IOException {
+	private byte[] appendIdNonceMessage(byte[] message) throws IOException {
 		ByteArrayOutputStream array = new ByteArrayOutputStream();
+		nonce++;
 		array.write(getID());
 		array.write(getNonce());
 		array.write(message);
-		System.out.println("ID :" + Utils.toHex(getID()));
-		System.out.println("Nonce: " + Utils.toHex(getNonce()));
-		System.out.println("M: " + Utils.toHex(message));
+//		System.out.println("ID :" + Utils.toHex(getID()));
+//		System.out.println("Nonce: " + Utils.toHex(getNonce()));
+//		System.out.println("M: " + Utils.toHex(message));
 		return array.toByteArray();
 	}
 
 	public byte[] createPayload(byte[] message) throws IOException {
 		try {
-			byte[] finalMessage = genericBlockCipher.encrypt(message);
+			byte[] finalMessage = genericBlockCipher.encrypt(appendIdNonceMessage(message));
+			//
 			// genericMac.generateMessageWithMacAppended(messageToApplyMac(
-			nonce++;
 			return finalMessage;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -69,32 +69,38 @@ public class Payload {
 	}
 
 	public boolean checkNonce(long nonce) {
+//		if (nonce <= this.nonce)
+//			return false;
+//		this.nonce = nonce;
 		return true; // TODO
 	}
 
-	public byte[] processPayload(byte[] message, short messageLength) throws InvalidKeyException, ShortBufferException,
+	public byte[] processPayload(byte[] message) throws InvalidKeyException, ShortBufferException,
 			IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException,
 			NoSuchPaddingException, IOException, InvalidAlgorithmParameterException {
-		genericBlockCipher.decrypt(message, messageLength);
-		byte[] idReceived = new byte[8];
-		System.arraycopy(message, 0, id, 0, 8);
+//		genericBlockCipher.decrypt(message, length);
+		int idSize = getID().length;
+		byte[] idReceived = new byte[idSize];
+		System.arraycopy(message, 0, idReceived, 0, idSize);
 		if (!checkID(BytesUtils.byte2long(idReceived)))
 			return new byte[1];
-		byte[] nonceReceived = new byte[8];
-		System.arraycopy(message, 8, nonceReceived, 0, 8);
+		int nonceSize = getNonce().length;
+		byte[] nonceReceived = new byte[nonceSize];
+		System.arraycopy(message, 8, nonceReceived, 0, nonceSize);
 		if (!checkNonce(BytesUtils.byte2long(nonceReceived)))
 			return new byte[1];
 
 //		System.out.println("TamanhoMensagem: " + message.length);
-		byte[] messageToHash = new byte[messageLength + 16];
-		System.arraycopy(message, 0, messageToHash, 0, 16 + messageLength);
-		byte[] mac = new byte[16];
-		System.arraycopy(message, 16 + messageLength, mac, 0, 16);
-		if (!genericMac.confirmKMac(messageToHash, mac))
-			return new byte[8];
+//		byte[] messageToHash = new byte[length + 16];
+//		System.arraycopy(message, 0, messageToHash, 0, 16 + length);
+//		byte[] mac = new byte[16];
+//		System.arraycopy(message, 16 + length, mac, 0, 16);
+//		if (!genericMac.confirmKMac(messageToHash, mac))
+//			return new byte[8];
+		int messageSize = message.length - idSize - nonceSize;
+		byte[] finalMessage = new byte[messageSize];
 
-		byte[] finalMessage = new byte[messageLength];
-		System.arraycopy(message, 16, finalMessage, 0, messageLength);
+		System.arraycopy(message, idSize + nonceSize, finalMessage, 0, messageSize);
 		return finalMessage;
 	}
 

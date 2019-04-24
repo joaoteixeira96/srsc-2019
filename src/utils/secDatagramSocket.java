@@ -19,7 +19,7 @@ public class secDatagramSocket extends DatagramSocket {
 	public secDatagramSocket(SocketAddress socketAddress) throws SocketException {
 		super(socketAddress);
 		ciphersuite = new ciphersuiteConfig();
-		payload = new Payload(123456L, 9999L, ciphersuite);
+		payload = new Payload(123456, 9999L, ciphersuite);
 		byte[] version = { 0x11 };
 		byte[] payloadType = { 0x01 };
 		header = new Header(version, payloadType);
@@ -56,13 +56,14 @@ public class secDatagramSocket extends DatagramSocket {
 		// header = new byte[6],payload = new byte[shortMessage.length - 6];
 		try {
 //			System.arraycopy(shortMessage, 0, header, 0, 6);
-//			System.arraycopy(shortMessage, 6, payload, 0, shortMessage.length - 6);
+//			System.arraycopy(shortMessage, 0, payload, 0, shortMessage.length);
 			// shortMessage = this.payload.processPayload(payload,
 			// this.header.getMessageLength(header));
 //			int plaintTextLength = this.header.getMessageLength(header);
 //			System.out.println("plaintTextLength: " + plaintTextLength);
 			genericBlockCipher genericBlockCipher = new genericBlockCipher(ciphersuite);
-			byte[] decryptedMessage = genericBlockCipher.decrypt(shortMessage, shortMessage.length);
+			byte[] processPayload = payload.processPayload(shortMessage);
+			byte[] decryptedMessage = genericBlockCipher.decrypt(processPayload, processPayload.length);
 //			byte[] finalMessage = new byte[plaintTextLength];
 //			System.arraycopy(decryptedMessage, 0, finalMessage, 0, plaintTextLength);
 			datagram.setData(decryptedMessage);
