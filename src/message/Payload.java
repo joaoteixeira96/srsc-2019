@@ -54,7 +54,8 @@ public class Payload {
 
 	public byte[] createPayload(byte[] message) throws IOException {
 		try {
-			byte[] finalMessage = genericBlockCipher.encrypt(appendIdNonceMessage(message));
+			byte[] finalMessage = genericBlockCipher
+					.encrypt(genericMac.generateMessageWithMacAppended(appendIdNonceMessage(message)));
 			//
 			// genericMac.generateMessageWithMacAppended(messageToApplyMac(
 			return finalMessage;
@@ -91,13 +92,12 @@ public class Payload {
 			return new byte[1];
 
 //		System.out.println("TamanhoMensagem: " + message.length);
-//		byte[] messageToHash = new byte[length + 16];
-//		System.arraycopy(message, 0, messageToHash, 0, 16 + length);
-//		byte[] mac = new byte[16];
-//		System.arraycopy(message, 16 + length, mac, 0, 16);
+		// TODO get correct mac size with getMacLength()
+		byte[] mac = new byte[16];
+		System.arraycopy(message, message.length - mac.length, mac, 0, mac.length);
 //		if (!genericMac.confirmKMac(messageToHash, mac))
 //			return new byte[8];
-		int messageSize = message.length - idSize - nonceSize;
+		int messageSize = message.length - idSize - nonceSize - mac.length;
 		byte[] finalMessage = new byte[messageSize];
 
 		System.arraycopy(message, idSize + nonceSize, finalMessage, 0, messageSize);

@@ -62,11 +62,11 @@ public class secDatagramSocket extends DatagramSocket {
 //			int plaintTextLength = this.header.getMessageLength(header);
 //			System.out.println("plaintTextLength: " + plaintTextLength);
 			genericBlockCipher genericBlockCipher = new genericBlockCipher(ciphersuite);
-			byte[] processPayload = payload.processPayload(shortMessage);
-			byte[] decryptedMessage = genericBlockCipher.decrypt(processPayload, processPayload.length);
+			byte[] decryptedMessage = genericBlockCipher.decrypt(shortMessage, shortMessage.length);
+			byte[] processPayload = payload.processPayload(decryptedMessage);
 //			byte[] finalMessage = new byte[plaintTextLength];
 //			System.arraycopy(decryptedMessage, 0, finalMessage, 0, plaintTextLength);
-			datagram.setData(decryptedMessage);
+			datagram.setData(processPayload);
 			// genericBlockCipher.decrypt(
 		} catch (Exception e) {
 			e.printStackTrace();
