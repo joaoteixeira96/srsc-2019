@@ -12,8 +12,9 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
+import org.bouncycastle.util.Arrays;
+
 import utils.BytesUtils;
-import utils.Utils;
 import utils.ciphersuiteConfig;
 import utils.genericBlockCipher;
 import utils.genericMAC;
@@ -77,36 +78,66 @@ public class Payload {
 		return true;
 	}
 
+	private byte[] getMessageToHash(byte[] message) {
+		return Arrays.copyOfRange(message, 0, message.length - 16); // TODO: Change Magic Number
+	}
+
+	private boolean WrongID(byte[] message) {
+		try {
+			return !checkID(BytesUtils.byte2long(Arrays.copyOfRange(message, 0, getID().length)));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} // TODO: Change Magic
+			// Number
+	}
+
+	private boolean WrongNonce(byte[] message) {
+		try {
+			return !checkNonce(BytesUtils
+					.byte2long(Arrays.copyOfRange(message, getID().length, getID().length + getNonce().length)));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} // TODO:
+			// Change
+			// Magic
+			// Number
+	}
+
+	private byte[] getMac(byte[] message) {
+		return Arrays.copyOfRange(message, message.length - 16, message.length); // TODO: Change Magic Number
+	}
+
+	private byte[] getMessage(byte[] message) {
+		int startIndex, endIndex;
+		try {
+			startIndex = getID().length + getNonce().length;
+			endIndex = message.length - 16; // TODO: Change Magic number
+			return Arrays.copyOfRange(message, startIndex, endIndex);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return new byte[0];
+		}
+	}
+
 	public byte[] processPayload(byte[] message) throws InvalidKeyException, ShortBufferException,
 			IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException,
 			NoSuchPaddingException, IOException, InvalidAlgorithmParameterException {
-//		genericBlockCipher.decrypt(message, length);
-		int idSize = getID().length;
-		byte[] idReceived = new byte[idSize];
-		System.arraycopy(message, 0, idReceived, 0, idSize);
-		if (!checkID(BytesUtils.byte2long(idReceived)))
-			return new byte[1];
-		int nonceSize = getNonce().length;
-		byte[] nonceReceived = new byte[nonceSize];
-		System.arraycopy(message, 8, nonceReceived, 0, nonceSize);
-		System.out.println(BytesUtils.byte2long(nonceReceived));
-		if (!checkNonce(BytesUtils.byte2long(nonceReceived)))
-			return new byte[1];
 
-//		System.out.println("TamanhoMensagem: " + message.length);
-		// TODO get correct mac size with getMacLength()
-		byte[] mac = new byte[16];
-		System.arraycopy(message, message.length - mac.length, mac, 0, mac.length);
-		int messageSize = message.length - idSize - nonceSize - mac.length;
-		byte[] messageToHash = new byte[messageSize + idSize + nonceSize];
-		System.arraycopy(message, 0, messageToHash, 0, messageToHash.length);
-		byte[] finalMessage = new byte[messageSize];
-		System.arraycopy(message, idSize + nonceSize, finalMessage, 0, messageSize);
-		System.out.println("processPayload: " + Utils.toHex(mac));
-		if (!genericMac.confirmKMac(messageToHash, mac))
-			return new byte[8];
+		if (WrongID(message))
+			return new byte[0];
 
-		return finalMessage;
+		if (WrongNonce(message))
+			return new byte[0];
+
+		if (!genericMac.confirmKMac(getMessageToHash(message), getMac(message)))
+			return new byte[0];
+
+		return getMessage(message);
 	}
 
 }
