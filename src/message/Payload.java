@@ -13,6 +13,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
 import utils.BytesUtils;
+import utils.Utils;
 import utils.ciphersuiteConfig;
 import utils.genericBlockCipher;
 import utils.genericMAC;
@@ -66,14 +67,14 @@ public class Payload {
 	}
 
 	public boolean checkID(long id) {
-		return id == this.id; // TODO
+		return id == this.id;
 	}
 
 	public boolean checkNonce(long nonce) {
 		if (nonce <= this.nonce)
 			return false;
 		this.nonce = nonce;
-		return true; // TODO
+		return true;
 	}
 
 	public byte[] processPayload(byte[] message) throws InvalidKeyException, ShortBufferException,
@@ -96,12 +97,15 @@ public class Payload {
 		// TODO get correct mac size with getMacLength()
 		byte[] mac = new byte[16];
 		System.arraycopy(message, message.length - mac.length, mac, 0, mac.length);
-//		if (!genericMac.confirmKMac(messageToHash, mac))
-//			return new byte[8];
 		int messageSize = message.length - idSize - nonceSize - mac.length;
+		byte[] messageToHash = new byte[messageSize + idSize + nonceSize];
+		System.arraycopy(message, 0, messageToHash, 0, messageToHash.length);
 		byte[] finalMessage = new byte[messageSize];
-
 		System.arraycopy(message, idSize + nonceSize, finalMessage, 0, messageSize);
+		System.out.println("processPayload: " + Utils.toHex(mac));
+		if (!genericMac.confirmKMac(messageToHash, mac))
+			return new byte[8];
+
 		return finalMessage;
 	}
 

@@ -16,6 +16,7 @@ public class genericMAC {
 
 	public byte[] generateMessageWithMacAppended(byte[] message) throws Exception {
 		byte[] mac = calculateMacKM(message);
+		System.out.println("generateMessageWithMacAppended: " + Utils.toHex(mac));
 		ByteArrayOutputStream array = new ByteArrayOutputStream();
 		array.write(message);
 		array.write(mac);
@@ -23,6 +24,14 @@ public class genericMAC {
 	}
 
 	public boolean confirmKMac(byte[] message, byte[] mac) {
+		try {
+			byte[] messageMac = calculateMacKM(message);
+			System.out.println("confirmKMac:messageMac " + Utils.toHex(messageMac) + "mac: " + Utils.toHex(mac));
+			return Utils.toHex(calculateMacKM(message)).equals(Utils.toHex(mac));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return true;// TODO
 	}
 
@@ -32,7 +41,8 @@ public class genericMAC {
 			AlgorithmParameterSpec params = new IvParameterSpec(ciphersuite.getIV().getBytes());
 			mac.init(ciphersuite.getMacKMKey(), params);
 			mac.update(ciphersuite.getIV().getBytes());
-			return mac.doFinal(message);
+			mac.update(message);
+			return mac.doFinal();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Hash failed");
