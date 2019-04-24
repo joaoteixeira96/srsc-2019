@@ -66,13 +66,13 @@ public class Payload {
 	}
 
 	public boolean checkID(long id) {
-		return true; // TODO
+		return id == this.id; // TODO
 	}
 
 	public boolean checkNonce(long nonce) {
-//		if (nonce <= this.nonce)
-//			return false;
-//		this.nonce = nonce;
+		if (nonce <= this.nonce)
+			return false;
+		this.nonce = nonce;
 		return true; // TODO
 	}
 
@@ -88,6 +88,7 @@ public class Payload {
 		int nonceSize = getNonce().length;
 		byte[] nonceReceived = new byte[nonceSize];
 		System.arraycopy(message, 8, nonceReceived, 0, nonceSize);
+		System.out.println(BytesUtils.byte2long(nonceReceived));
 		if (!checkNonce(BytesUtils.byte2long(nonceReceived)))
 			return new byte[1];
 
