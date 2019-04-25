@@ -57,9 +57,7 @@ public class Payload {
 	public byte[] createPayload(byte[] message) throws IOException {
 		try {
 			byte[] finalMessage = genericBlockCipher
-					.encrypt(genericMac.generateMessageWithMacAppended(appendIdNonceMessage(message)));
-			//
-			// genericMac.generateMessageWithMacAppended(messageToApplyMac(
+					.encrypt(genericMac.generateMessageWithMacAppended(appendIdNonceMessage(message), "KM"));
 			return finalMessage;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -86,11 +84,9 @@ public class Payload {
 		try {
 			return !checkID(BytesUtils.byte2long(Arrays.copyOfRange(message, 0, getID().length)));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
-		} // TODO: Change Magic
-			// Number
+		}
 	}
 
 	private boolean WrongNonce(byte[] message) {
@@ -98,13 +94,9 @@ public class Payload {
 			return !checkNonce(BytesUtils
 					.byte2long(Arrays.copyOfRange(message, getID().length, getID().length + getNonce().length)));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
-		} // TODO:
-			// Change
-			// Magic
-			// Number
+		}
 	}
 
 	private byte[] getMac(byte[] message) {
@@ -118,7 +110,6 @@ public class Payload {
 			endIndex = message.length - 16; // TODO: Change Magic number
 			return Arrays.copyOfRange(message, startIndex, endIndex);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return new byte[0];
 		}
@@ -128,16 +119,18 @@ public class Payload {
 			IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException,
 			NoSuchPaddingException, IOException, InvalidAlgorithmParameterException {
 
-		if (WrongID(message))
+		byte[] decryptedMessage = genericBlockCipher.decrypt(message, message.length);
+
+		if (WrongID(decryptedMessage))
 			return new byte[0];
 
-		if (WrongNonce(message))
+		if (WrongNonce(decryptedMessage))
 			return new byte[0];
 
-		if (!genericMac.confirmKMac(getMessageToHash(message), getMac(message)))
+		if (!genericMac.confirmKMac(getMessageToHash(decryptedMessage), getMac(decryptedMessage)))
 			return new byte[0];
 
-		return getMessage(message);
+		return getMessage(decryptedMessage);
 	}
 
 }

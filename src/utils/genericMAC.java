@@ -2,6 +2,7 @@ package utils;
 
 import java.io.ByteArrayOutputStream;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
@@ -14,9 +15,20 @@ public class genericMAC {
 		this.ciphersuite = ciphersuite;
 	}
 
-	public byte[] generateMessageWithMacAppended(byte[] message) throws Exception {
-		byte[] mac = calculateMacKM(message);
-		System.out.println("generateMessageWithMacAppended: " + Utils.toHex(mac));
+	public byte[] generateMessageWithMacAppended(byte[] message, String type) throws Exception {
+		byte[] mac = null;
+		switch (type) {
+		case "KM":
+			mac = calculateMacKM(message);
+			break;
+		case "KA":
+			mac = calculateMacKA(message);
+			break;
+		default:
+			mac = calculateMacKM(message);
+			break;
+		}
+//		System.out.println("generateMessageWithMacAppended: " + Utils.toHex(mac));
 		ByteArrayOutputStream array = new ByteArrayOutputStream();
 		array.write(message);
 		array.write(mac);
@@ -25,14 +37,13 @@ public class genericMAC {
 
 	public boolean confirmKMac(byte[] message, byte[] mac) {
 		try {
-			byte[] messageMac = calculateMacKM(message);
-			System.out.println("confirmKMac:messageMac " + Utils.toHex(messageMac) + "mac: " + Utils.toHex(mac));
-			return Utils.toHex(calculateMacKM(message)).equals(Utils.toHex(mac));
+//			System.out.println("confirmKMac:messageMac " + Utils.toHex(messageMac) + "mac: " + Utils.toHex(mac));
+			// Utils.toHex(calculateMacKM(message)).equals(Utils.toHex(mac));
+			return Arrays.equals(mac, calculateMacKM(message));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
-		return true;// TODO
 	}
 
 	private byte[] calculateMacKM(byte[] message) throws Exception {
@@ -45,7 +56,20 @@ public class genericMAC {
 			return mac.doFinal();
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Hash failed");
+			throw new Exception("Hash failed");
+		}
+	}
+
+	private byte[] calculateMacKA(byte[] message) throws Exception {
+		try {
+			Mac mac = Mac.getInstance(ciphersuite.getMACKA());
+			AlgorithmParameterSpec params = new IvParameterSpec(ciphersuite.getIV().getBytes());
+			mac.init(ciphersuite.getMacKAKey(), params);
+			mac.update(ciphersuite.getIV().getBytes());
+			mac.update(message);
+			return mac.doFinal();
+		} catch (Exception e) {
+			e.printStackTrace();
 			throw new Exception("Hash failed");
 		}
 	}

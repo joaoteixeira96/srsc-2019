@@ -28,46 +28,30 @@ public class secDatagramSocket extends DatagramSocket {
 	public secDatagramSocket() throws SocketException {
 		super();
 		ciphersuite = new ciphersuiteConfig();
-		payload = new Payload(123456L, 9999L, ciphersuite);
+		payload = new Payload(123456, 9999L, ciphersuite);
 		byte[] version = { 0x11 };
 		byte[] payloadType = { 0x01 };
 		header = new Header(version, payloadType);
 	}
 
 	public void send(DatagramPacket datagram) throws IOException {
-		byte[] fullMessage = datagram.getData();
-		byte[] shortMessage = Arrays.copyOfRange(fullMessage, 0, datagram.getLength());
-//		System.out.println("Message sent: " + Utils.toHex(shortMessage) + "Bytes: " + shortMessage.length);
-		byte[] finalMessagePayload = payload.createPayload(shortMessage);
-//		byte[] finalMessageHeader = header.generateHeader(shortMessage);
-//		byte[] finalMessage = new byte[finalMessageHeader.length + finalMessagePayload.length];
-//		System.arraycopy(finalMessageHeader, 0, finalMessage, 0, finalMessageHeader.length);
-//		System.arraycopy(finalMessagePayload, 0, finalMessage, finalMessageHeader.length, finalMessagePayload.length);
-//		datagram.setData(finalMessagePayload, 0, finalMessagePayload.length);
+		byte[] finalMessagePayload = payload
+				.createPayload(messageWithoutGarbage(datagram.getData(), datagram.getLength()));
+		byte[] macDoS = new byte[8];
 		datagram.setData(finalMessagePayload);
 		super.send(datagram);
 	}
 
+	private byte[] messageWithoutGarbage(byte[] message, int length) {
+		return Arrays.copyOf(message, length);
+	}
+
 	public void receive(DatagramPacket datagram) throws IOException {
 		super.receive(datagram);
-
-		byte[] fullMessage = datagram.getData();
-		byte[] shortMessage = Arrays.copyOfRange(fullMessage, 0, datagram.getLength());
-		// header = new byte[6],payload = new byte[shortMessage.length - 6];
 		try {
-//			System.arraycopy(shortMessage, 0, header, 0, 6);
-//			System.arraycopy(shortMessage, 0, payload, 0, shortMessage.length);
-			// shortMessage = this.payload.processPayload(payload,
-			// this.header.getMessageLength(header));
-//			int plaintTextLength = this.header.getMessageLength(header);
-//			System.out.println("plaintTextLength: " + plaintTextLength);
-			genericBlockCipher genericBlockCipher = new genericBlockCipher(ciphersuite);
-			byte[] decryptedMessage = genericBlockCipher.decrypt(shortMessage, shortMessage.length);
-			byte[] processPayload = payload.processPayload(decryptedMessage);
-//			byte[] finalMessage = new byte[plaintTextLength];
-//			System.arraycopy(decryptedMessage, 0, finalMessage, 0, plaintTextLength);
+			byte[] processPayload = payload
+					.processPayload(messageWithoutGarbage(datagram.getData(), datagram.getLength()));
 			datagram.setData(processPayload);
-			// genericBlockCipher.decrypt(
 		} catch (Exception e) {
 			e.printStackTrace();
 			datagram.setData(new byte[0]);
