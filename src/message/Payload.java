@@ -30,8 +30,8 @@ public class Payload {
 		super();
 		this.id = id;
 		this.nonce = nonce;
-		this.genericMac = new genericMAC(ciphersuite);
-		this.genericBlockCipher = new genericBlockCipher(ciphersuite);
+		this.genericMac = new genericMAC(ciphersuite, false); // TODO
+		this.genericBlockCipher = new genericBlockCipher(ciphersuite, false); // TODO
 	}
 
 	private byte[] getID() throws IOException {
@@ -75,7 +75,7 @@ public class Payload {
 	}
 
 	private byte[] getMessageToHash(byte[] message) {
-		return Arrays.copyOfRange(message, 0, message.length - 16); // TODO: Change Magic Number
+		return Arrays.copyOfRange(message, 0, message.length - genericMac.macKMSize()); // TODO: Change Magic Number
 	}
 
 	private boolean WrongID(byte[] message) {
@@ -108,14 +108,15 @@ public class Payload {
 	}
 
 	private byte[] getMac(byte[] message) {
-		return Arrays.copyOfRange(message, message.length - 16, message.length); // TODO: Change Magic Number
+		return Arrays.copyOfRange(message, message.length - genericMac.macKMSize(), message.length); // TODO: Change
+																										// Magic Number
 	}
 
 	private byte[] getMessage(byte[] message) {
 		int startIndex, endIndex;
 		try {
 			startIndex = getID().length + getNonce().length;
-			endIndex = message.length - 16; // TODO: Change Magic number
+			endIndex = message.length - genericMac.macKMSize(); // TODO: Change Magic number
 			return Arrays.copyOfRange(message, startIndex, endIndex);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -128,7 +129,7 @@ public class Payload {
 	}
 
 	private byte[] macDOS(byte[] message) {
-		return Arrays.copyOfRange(message, message.length - genericMac.macKASize(), message.length);
+		return Arrays.copyOfRange(message, message.length - genericMac.macKMSize(), message.length);
 	}
 
 	public byte[] processPayload(byte[] message) throws InvalidKeyException, ShortBufferException,

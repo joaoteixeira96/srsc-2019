@@ -9,18 +9,20 @@ import javax.crypto.spec.IvParameterSpec;
 
 public class genericMAC {
 	private ciphersuiteConfig ciphersuite;
+	private boolean useIV;
 
-	public genericMAC(ciphersuiteConfig ciphersuite) {
+	public genericMAC(ciphersuiteConfig ciphersuite, boolean useIV) {
 		super();
 		this.ciphersuite = ciphersuite;
+		this.useIV = useIV;
 	}
 
 	public int macKMSize() {
-		return 16; // TODO
+		return ciphersuite.getMACKMSIZE();
 	}
 
 	public int macKASize() {
-		return 16; // TODO
+		return ciphersuite.getMACKASIZE();
 	}
 
 	public byte[] generateMessageWithMacAppended(byte[] message, String type) throws Exception {
@@ -36,7 +38,6 @@ public class genericMAC {
 			mac = calculateMacKM(message);
 			break;
 		}
-//		System.out.println("generateMessageWithMacAppended: " + Utils.toHex(mac));
 		ByteArrayOutputStream array = new ByteArrayOutputStream();
 		array.write(message);
 		array.write(mac);
@@ -62,9 +63,13 @@ public class genericMAC {
 	private byte[] calculateMacKM(byte[] message) throws Exception {
 		try {
 			Mac mac = Mac.getInstance(ciphersuite.getMACKM());
-			AlgorithmParameterSpec params = new IvParameterSpec(ciphersuite.getIV().getBytes());
-			mac.init(ciphersuite.getMacKMKey(), params);
-			mac.update(ciphersuite.getIV().getBytes());
+			if (useIV) {
+				AlgorithmParameterSpec params = new IvParameterSpec(IvGenerator.generateIV("rc6-gmac"));
+				mac.init(ciphersuite.getMacKMKey(), params);
+				mac.update(IvGenerator.generateIV("rc6-gmac"));
+			} else {
+				mac.init(ciphersuite.getMacKMKey());
+			}
 			mac.update(message);
 			return mac.doFinal();
 		} catch (Exception e) {
@@ -76,9 +81,13 @@ public class genericMAC {
 	private byte[] calculateMacKA(byte[] message) throws Exception {
 		try {
 			Mac mac = Mac.getInstance(ciphersuite.getMACKA());
-			AlgorithmParameterSpec params = new IvParameterSpec(ciphersuite.getIV().getBytes());
-			mac.init(ciphersuite.getMacKAKey(), params);
-			mac.update(ciphersuite.getIV().getBytes());
+			if (useIV) {
+				AlgorithmParameterSpec params = new IvParameterSpec(IvGenerator.generateIV("rc6-gmac"));
+				mac.init(ciphersuite.getMacKAKey(), params);
+				mac.update(IvGenerator.generateIV("rc6-gmac"));
+			} else {
+				mac.init(ciphersuite.getMacKAKey());
+			}
 			mac.update(message);
 			return mac.doFinal();
 		} catch (Exception e) {

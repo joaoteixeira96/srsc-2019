@@ -21,16 +21,16 @@ public class genericBlockCipher {
 	private String mode;
 	private String padding;
 	private String ciphersuite;
-	private String iv;
+	private boolean useIV;
 
-	public genericBlockCipher(ciphersuiteConfig ciphersuiteConfig) {
+	public genericBlockCipher(ciphersuiteConfig ciphersuiteConfig, boolean useIV) {
 		super();
+		this.useIV = useIV;
 		this.ciphersuite = ciphersuiteConfig.getCiphersuite();
 		this.key = ciphersuiteConfig.getSessionKey();
 		method = ciphersuite.split("/")[0];
 		mode = ciphersuite.split("/")[1];
 		padding = ciphersuite.split("/")[2];
-		this.iv = ciphersuiteConfig.getIV();
 	}
 
 	public byte[] encrypt(byte[] input) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException,
@@ -38,24 +38,24 @@ public class genericBlockCipher {
 			InvalidAlgorithmParameterException {
 
 		byte[] keyBytes = key.getEncoded();
-
-//		System.out.println("plaintext M in encrypt Method: " + Utils.toHex(input) + "Bytes: " + input.length);
-
 		SecretKeySpec key = new SecretKeySpec(keyBytes, method);
-		IvParameterSpec ivSpec = new IvParameterSpec(new byte[16]);
 		Cipher cipher = Cipher.getInstance(method + "/" + mode + "/" + padding, "SunJCE");
+		byte[] cipherText = null;
+		int ctLength = 0;
 
-//		System.out.println("key   : " + Utils.toHex(keyBytes));
-//		System.out.println("input : " + Utils.toHex(input));
 		// encryption
-		cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
-		byte[] cipherText = new byte[cipher.getOutputSize(input.length + iv.length())];
-//		System.out.println(cipher.getOutputSize(input.length));
-		int ctLength = cipher.update(iv.getBytes(), 0, iv.length(), cipherText, 0);
+		if (useIV) {
+			IvParameterSpec ivSpec = new IvParameterSpec(new byte[IvGenerator.ivLength(method)]);
+			cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+			byte[] iv = IvGenerator.generateIV(method);
+			cipherText = new byte[cipher.getOutputSize(input.length + iv.length)];
+			ctLength = cipher.update(iv, 0, iv.length, cipherText, 0);
+		} else {
+			cipher.init(Cipher.ENCRYPT_MODE, key);
+			cipherText = new byte[cipher.getOutputSize(input.length)];
+		}
 		ctLength += cipher.update(input, 0, input.length, cipherText, ctLength);
 		ctLength += cipher.doFinal(cipherText, ctLength);
-
-//		System.out.println("cipher M in encrypt Method: " + Utils.toHex(cipherText, ctLength) + " bytes: " + ctLength);
 
 		return cipherText;
 
@@ -64,25 +64,29 @@ public class genericBlockCipher {
 	public byte[] decrypt(byte[] encryptedMessage, int plaintextLength) throws ShortBufferException,
 			IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException {
-//		System.out.println("Cipher M in decrypt Method: " + Utils.toHex(encryptedMessage) + " bytes: " + encryptedMessage.length);
 		byte[] keyBytes = key.getEncoded();
 
 		SecretKeySpec key = new SecretKeySpec(keyBytes, method);
-		IvParameterSpec ivSpec = new IvParameterSpec(new byte[16]);
 		Cipher cipher = Cipher.getInstance(method + "/" + mode + "/" + padding, "SunJCE");
 
-//		System.out.println("key   : " + Utils.toHex(keyBytes));
+		int iv = IvGenerator.ivLength(method);
+		if (useIV) {
+			IvParameterSpec ivSpec = new IvParameterSpec(new byte[iv]);
+			cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+		} else {
+			cipher.init(Cipher.DECRYPT_MODE, key);
+			iv = 0;
+		}
 
 		// decryption
-		cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+
 		byte[] buf = new byte[cipher.getOutputSize(encryptedMessage.length)];
 		int ptLength = cipher.update(encryptedMessage, 0, encryptedMessage.length, buf, 0);
 		ptLength += cipher.doFinal(buf, ptLength);
 
-		byte[] plainText = new byte[ptLength - iv.length()];
-		System.arraycopy(buf, iv.length(), plainText, 0, plainText.length);
-		byte[] shortMessage = Arrays.copyOfRange(plainText, 0, ptLength - iv.length());
-//		System.out.println("Plaintext M in decrypt Method: " + Utils.toHex(plainText, ptLength) + " bytes: " + ptLength);
+		byte[] plainText = new byte[ptLength - iv];
+		System.arraycopy(buf, iv, plainText, 0, plainText.length);
+		byte[] shortMessage = Arrays.copyOfRange(plainText, 0, ptLength - iv);
 		return shortMessage;
 	}
 }

@@ -25,12 +25,11 @@ public class Header {
 		ByteBuffer buffer = ByteBuffer.allocate(2);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putShort(messageSize);
-		short size = (short) message.length;
 		System.arraycopy(versionRelease, 0, header, 0, 1);
 		System.arraycopy(separator, 0, header, 1, 1);
 		System.arraycopy(payloadType, 0, header, 2, 1);
 		System.arraycopy(separator, 0, header, 3, 1);
-		System.arraycopy(size, 0, header, 4, 2);
+		System.arraycopy(buffer.array(), 0, header, 4, 2);
 //		System.out.println("send: " + header[4]);
 		return header;
 	}

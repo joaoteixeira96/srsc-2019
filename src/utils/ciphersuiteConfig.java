@@ -8,14 +8,12 @@ import javax.crypto.spec.SecretKeySpec;
 public class ciphersuiteConfig {
 	private String ciphersuite;
 	private String sessionkeysize;
-	private String IV;
-
 	private String sessionkeyvalue;
 	private String MACKM;
-	private String MACKMSIZE;
+	private int MACKMSIZE;
 	private String MACKMVALUE;
 	private String MACKA;
-	private String MACKASIZE;
+	private int MACKASIZE;
 	private String MACKAVALUE;
 	private SecretKeySpec sessionKey;
 	private SecretKeySpec macKAKey;
@@ -27,16 +25,15 @@ public class ciphersuiteConfig {
 			Properties properties = new Properties();
 			properties.load(inputStream);
 			ciphersuite = properties.getProperty("CIPHERSUITE");
-			IV = properties.getProperty("IV");
 			sessionkeysize = properties.getProperty("SESSIONKEYSIZE");
 			sessionkeyvalue = properties.getProperty("SESSIONKEYVALUE");
 			sessionKey = new SecretKeySpec(sessionkeyvalue.getBytes(), ciphersuite.split("/")[0]);
 			MACKM = properties.getProperty("MACKM");
-			MACKMSIZE = properties.getProperty("MACKMEYSIZE");
+			MACKMSIZE = Integer.parseInt(properties.getProperty("MACKMEYSIZE"));
 			MACKMVALUE = properties.getProperty("MACKMEYVALUE");
 			macKMKey = new SecretKeySpec(MACKMVALUE.getBytes(), MACKM);
 			MACKA = properties.getProperty("MACKA");
-			MACKASIZE = properties.getProperty("MACKAKEYSIZE");
+			MACKASIZE = Integer.parseInt(properties.getProperty("MACKAKEYSIZE"));
 			MACKAVALUE = properties.getProperty("MACKAMEYVALUE");
 			macKAKey = new SecretKeySpec(MACKAVALUE.getBytes(), MACKA);
 		} catch (Exception e) {
@@ -57,14 +54,6 @@ public class ciphersuiteConfig {
 		this.ciphersuite = ciphersuite;
 	}
 
-	public void setIV(String iV) {
-		IV = iV;
-	}
-
-	public String getIV() {
-		return IV;
-	}
-
 	public void setSessionKey(SecretKeySpec sessionKey) {
 		this.sessionKey = sessionKey;
 	}
@@ -79,7 +68,7 @@ public class ciphersuiteConfig {
 
 	@Override
 	public String toString() {
-		return "ciphersuiteConfig [ciphersuite=" + ciphersuite + ", sessionkeysize=" + sessionkeysize + ", IV=" + IV
+		return "ciphersuiteConfig [ciphersuite=" + ciphersuite + ", sessionkeysize=" + sessionkeysize
 				+ ", sessionkeyvalue=" + sessionkeyvalue + ", MACKM=" + MACKM + ", MACKMSIZE=" + MACKMSIZE
 				+ ", MACKMVALUE=" + MACKMVALUE + ", MACKA=" + MACKA + ", MACKASIZE=" + MACKASIZE + ", MACKAVALUE="
 				+ MACKAVALUE + ", sessionKey=" + sessionKey + ", macKAKey=" + macKAKey + ", macKMKey=" + macKMKey + "]";
@@ -117,11 +106,11 @@ public class ciphersuiteConfig {
 		MACKM = mACKM;
 	}
 
-	public String getMACKMSIZE() {
-		return MACKMSIZE;
+	public int getMACKMSIZE() {
+		return MACKMSIZE / 8;
 	}
 
-	public void setMACKMSIZE(String mACKMSIZE) {
+	public void setMACKMSIZE(int mACKMSIZE) {
 		MACKMSIZE = mACKMSIZE;
 	}
 
@@ -141,11 +130,11 @@ public class ciphersuiteConfig {
 		MACKA = mACKA;
 	}
 
-	public String getMACKASIZE() {
-		return MACKASIZE;
+	public int getMACKASIZE() {
+		return MACKASIZE / 8;
 	}
 
-	public void setMACKASIZE(String mACKASIZE) {
+	public void setMACKASIZE(int mACKASIZE) {
 		MACKASIZE = mACKASIZE;
 	}
 

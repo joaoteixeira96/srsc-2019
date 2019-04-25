@@ -1,5 +1,6 @@
 package utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -14,6 +15,11 @@ public class secDatagramSocket extends DatagramSocket {
 
 	private static final int ID = (int) (Math.random() + System.currentTimeMillis());
 	private static final long NONCE = (long) (Math.random() + System.currentTimeMillis());
+	private static final int HEADER_SIZE = 6;
+	private static final byte[] VERSION = { 0x11 };
+	private static final byte[] PLAYLOAD_TYPE = { 0x01 };
+	private static final int DEFAULT_ID = -1;
+	private static final long DEFAULT_LONG = -1L;
 
 	private ciphersuiteConfig ciphersuite;
 	private Payload payload;
@@ -22,10 +28,8 @@ public class secDatagramSocket extends DatagramSocket {
 	public secDatagramSocket(SocketAddress socketAddress) throws SocketException {
 		super(socketAddress);
 		ciphersuite = new ciphersuiteConfig();
-		payload = new Payload(-1, -1L, ciphersuite);
-		byte[] version = { 0x11 };
-		byte[] payloadType = { 0x01 };
-		header = new Header(version, payloadType);
+		payload = new Payload(DEFAULT_ID, DEFAULT_LONG, ciphersuite);
+		header = new Header(VERSION, PLAYLOAD_TYPE);
 	}
 
 	public secDatagramSocket() throws SocketException {
@@ -38,9 +42,13 @@ public class secDatagramSocket extends DatagramSocket {
 	}
 
 	public void send(DatagramPacket datagram) throws IOException {
-		byte[] finalMessagePayload = payload
-				.createPayload(messageWithoutGarbage(datagram.getData(), datagram.getLength()));
-		datagram.setData(finalMessagePayload);
+		byte[] messageWihoutGargabe = messageWithoutGarbage(datagram.getData(), datagram.getLength());
+		byte[] Header = header.generateHeader(messageWihoutGargabe);
+		byte[] Payload = payload.createPayload(messageWihoutGargabe);
+		ByteArrayOutputStream array = new ByteArrayOutputStream();
+		array.write(Header);
+		array.write(Payload);
+		datagram.setData(array.toByteArray());
 		super.send(datagram);
 	}
 
@@ -48,11 +56,17 @@ public class secDatagramSocket extends DatagramSocket {
 		return Arrays.copyOf(message, length);
 	}
 
+	private byte[] getHeaderFromMessage(byte[] message, int length) {
+		return Arrays.copyOf(message, length);
+	}
+
 	public void receive(DatagramPacket datagram) throws IOException {
 		super.receive(datagram);
+		byte[] messageWithoutGargabe = messageWithoutGarbage(datagram.getData(), datagram.getLength());
+		byte[] header = getHeaderFromMessage(messageWithoutGargabe, HEADER_SIZE); // TODO MAGIC NUMBER
+		byte[] cipherMessage = Arrays.copyOfRange(messageWithoutGargabe, header.length, messageWithoutGargabe.length);
 		try {
-			byte[] processPayload = payload
-					.processPayload(messageWithoutGarbage(datagram.getData(), datagram.getLength()));
+			byte[] processPayload = payload.processPayload(cipherMessage);
 			datagram.setData(processPayload);
 		} catch (Exception e) {
 			e.printStackTrace();
