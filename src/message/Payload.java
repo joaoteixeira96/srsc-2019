@@ -21,7 +21,7 @@ import utils.genericMAC;
 
 public class Payload {
 
-	private final long id;
+	private long id;
 	private long nonce;
 	private genericBlockCipher genericBlockCipher;
 	private genericMAC genericMac;
@@ -48,9 +48,6 @@ public class Payload {
 		array.write(getID());
 		array.write(getNonce());
 		array.write(message);
-//		System.out.println("ID :" + Utils.toHex(getID()));
-//		System.out.println("Nonce: " + Utils.toHex(getNonce()));
-//		System.out.println("M: " + Utils.toHex(message));
 		return array.toByteArray();
 	}
 
@@ -83,7 +80,12 @@ public class Payload {
 
 	private boolean WrongID(byte[] message) {
 		try {
-			return !checkID(BytesUtils.byte2long(Arrays.copyOfRange(message, 0, getID().length)));
+			long messageId = BytesUtils.byte2long(Arrays.copyOfRange(message, 0, getID().length));
+			if (id < 0) {
+				id = messageId;
+				return true;
+			}
+			return !checkID(messageId);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -92,8 +94,13 @@ public class Payload {
 
 	private boolean WrongNonce(byte[] message) {
 		try {
-			return !checkNonce(BytesUtils
-					.byte2long(Arrays.copyOfRange(message, getID().length, getID().length + getNonce().length)));
+			long messageNonce = BytesUtils
+					.byte2long(Arrays.copyOfRange(message, getID().length, getID().length + getNonce().length));
+			if (nonce < 0) {
+				nonce = messageNonce;
+				return true;
+			}
+			return !checkNonce(messageNonce);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;

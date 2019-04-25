@@ -12,6 +12,9 @@ import message.Payload;
 
 public class secDatagramSocket extends DatagramSocket {
 
+	private static final int ID = (int) (Math.random() + System.currentTimeMillis());
+	private static final long NONCE = (long) (Math.random() + System.currentTimeMillis());
+
 	private ciphersuiteConfig ciphersuite;
 	private Payload payload;
 	private Header header;
@@ -19,7 +22,7 @@ public class secDatagramSocket extends DatagramSocket {
 	public secDatagramSocket(SocketAddress socketAddress) throws SocketException {
 		super(socketAddress);
 		ciphersuite = new ciphersuiteConfig();
-		payload = new Payload(123456, 9999L, ciphersuite);
+		payload = new Payload(-1, -1L, ciphersuite);
 		byte[] version = { 0x11 };
 		byte[] payloadType = { 0x01 };
 		header = new Header(version, payloadType);
@@ -28,7 +31,7 @@ public class secDatagramSocket extends DatagramSocket {
 	public secDatagramSocket() throws SocketException {
 		super();
 		ciphersuite = new ciphersuiteConfig();
-		payload = new Payload(123456, 9999L, ciphersuite);
+		payload = new Payload(ID, NONCE, ciphersuite);
 		byte[] version = { 0x11 };
 		byte[] payloadType = { 0x01 };
 		header = new Header(version, payloadType);
