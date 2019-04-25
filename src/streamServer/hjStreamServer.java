@@ -48,7 +48,6 @@ class hjStreamServer {
 			Thread.sleep(Math.max(0, ((time - q0) - (t - t0)) / 1000000));
 			s.send(p);
 
-//			System.out.println("Packet Sent: " + Utils.toHex(p.getData()) + "Bytes: " + p.getLength());
 		}
 		s.close();
 		System.out.println("DONE! packets sent: " + count);

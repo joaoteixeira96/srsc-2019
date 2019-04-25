@@ -15,6 +15,14 @@ public class genericMAC {
 		this.ciphersuite = ciphersuite;
 	}
 
+	public int macKMSize() {
+		return 16; // TODO
+	}
+
+	public int macKASize() {
+		return 16; // TODO
+	}
+
 	public byte[] generateMessageWithMacAppended(byte[] message, String type) throws Exception {
 		byte[] mac = null;
 		switch (type) {
@@ -35,11 +43,16 @@ public class genericMAC {
 		return array.toByteArray();
 	}
 
-	public boolean confirmKMac(byte[] message, byte[] mac) {
+	public boolean confirmKMac(byte[] message, byte[] mac, String type) {
 		try {
-//			System.out.println("confirmKMac:messageMac " + Utils.toHex(messageMac) + "mac: " + Utils.toHex(mac));
-			// Utils.toHex(calculateMacKM(message)).equals(Utils.toHex(mac));
-			return Arrays.equals(mac, calculateMacKM(message));
+			switch (type) {
+			case "KM":
+				return Arrays.equals(mac, calculateMacKM(message));
+			case "KA":
+				return Arrays.equals(mac, calculateMacKA(message));
+			default:
+				return Arrays.equals(mac, calculateMacKM(message));
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

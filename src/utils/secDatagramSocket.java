@@ -37,7 +37,6 @@ public class secDatagramSocket extends DatagramSocket {
 	public void send(DatagramPacket datagram) throws IOException {
 		byte[] finalMessagePayload = payload
 				.createPayload(messageWithoutGarbage(datagram.getData(), datagram.getLength()));
-		byte[] macDoS = new byte[8];
 		datagram.setData(finalMessagePayload);
 		super.send(datagram);
 	}

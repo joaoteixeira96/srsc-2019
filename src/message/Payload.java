@@ -58,7 +58,8 @@ public class Payload {
 		try {
 			byte[] finalMessage = genericBlockCipher
 					.encrypt(genericMac.generateMessageWithMacAppended(appendIdNonceMessage(message), "KM"));
-			return finalMessage;
+			byte[] messageWithDOS = genericMac.generateMessageWithMacAppended(finalMessage, "KA");
+			return messageWithDOS;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IOException("send failed");
@@ -115,11 +116,23 @@ public class Payload {
 		}
 	}
 
+	private byte[] messageWithoutDOS(byte[] message) {
+		return Arrays.copyOf(message, message.length - genericMac.macKASize());
+	}
+
+	private byte[] macDOS(byte[] message) {
+		return Arrays.copyOfRange(message, message.length - genericMac.macKASize(), message.length);
+	}
+
 	public byte[] processPayload(byte[] message) throws InvalidKeyException, ShortBufferException,
 			IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException,
 			NoSuchPaddingException, IOException, InvalidAlgorithmParameterException {
 
-		byte[] decryptedMessage = genericBlockCipher.decrypt(message, message.length);
+		byte[] messageWithoutDos = messageWithoutDOS(message);
+		if (!genericMac.confirmKMac(messageWithoutDos, macDOS(message), "KA"))
+			return new byte[0];
+
+		byte[] decryptedMessage = genericBlockCipher.decrypt(messageWithoutDos, messageWithoutDos.length);
 
 		if (WrongID(decryptedMessage))
 			return new byte[0];
@@ -127,7 +140,7 @@ public class Payload {
 		if (WrongNonce(decryptedMessage))
 			return new byte[0];
 
-		if (!genericMac.confirmKMac(getMessageToHash(decryptedMessage), getMac(decryptedMessage)))
+		if (!genericMac.confirmKMac(getMessageToHash(decryptedMessage), getMac(decryptedMessage), "KM"))
 			return new byte[0];
 
 		return getMessage(decryptedMessage);
