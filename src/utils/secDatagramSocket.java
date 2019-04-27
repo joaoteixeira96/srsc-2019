@@ -63,7 +63,7 @@ public class secDatagramSocket extends DatagramSocket {
 	public void receive(DatagramPacket datagram) throws IOException {
 		super.receive(datagram);
 		byte[] messageWithoutGargabe = messageWithoutGarbage(datagram.getData(), datagram.getLength());
-		byte[] header = getHeaderFromMessage(messageWithoutGargabe, HEADER_SIZE); // TODO MAGIC NUMBER
+		byte[] header = getHeaderFromMessage(messageWithoutGargabe, HEADER_SIZE);
 		byte[] cipherMessage = Arrays.copyOfRange(messageWithoutGargabe, header.length, messageWithoutGargabe.length);
 		try {
 			byte[] processPayload = payload.processPayload(cipherMessage);

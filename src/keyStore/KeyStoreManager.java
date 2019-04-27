@@ -13,13 +13,14 @@ import java.security.cert.CertificateException;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 public class KeyStoreManager {
 
 	private static final char[] PASSWORD = "password".toCharArray();
 	private static final String NO_MAC_TYPE = "";
 
-	public static SecretKey getEncryptionKey(String algorithm) throws KeyStoreException, NoSuchAlgorithmException,
+	public static SecretKeySpec getEncryptionKey(String algorithm) throws KeyStoreException, NoSuchAlgorithmException,
 			FileNotFoundException, CertificateException, IOException, UnrecoverableKeyException {
 		KeyStore keyStore = KeyStore.getInstance("JCEKS");
 		FileInputStream stream = new FileInputStream("mykeystore.jceks");
@@ -28,7 +29,7 @@ public class KeyStoreManager {
 		return fetchKey(keyStore, algorithm, NO_MAC_TYPE);
 	}
 
-	public static SecretKey getHashKey(String algorithm, String macType)
+	public static SecretKeySpec getHashKey(String algorithm, String macType)
 			throws KeyStoreException, NoSuchAlgorithmException, FileNotFoundException, CertificateException,
 			IOException, UnrecoverableKeyException {
 		KeyStore keyStore = KeyStore.getInstance("JCEKS");
@@ -37,11 +38,11 @@ public class KeyStoreManager {
 		return fetchKey(keyStore, algorithm, macType);
 	}
 
-	private static SecretKey fetchKey(KeyStore keyStore, String algorithm, String macType)
+	private static SecretKeySpec fetchKey(KeyStore keyStore, String algorithm, String macType)
 			throws NoSuchAlgorithmException, KeyStoreException, FileNotFoundException, CertificateException,
 			IOException, UnrecoverableKeyException {
 		String keyToFetch = macType.isEmpty() ? algorithm : algorithm + macType;
-		SecretKey key = (SecretKey) keyStore.getKey(keyToFetch, PASSWORD);
+		SecretKeySpec key = (SecretKeySpec) keyStore.getKey(keyToFetch, PASSWORD);
 		if (key == null) {
 			key = generateKey(algorithm);
 			if (!macType.isEmpty())
@@ -56,7 +57,7 @@ public class KeyStoreManager {
 
 	}
 
-	private static SecretKey generateKey(String algorithm) throws NoSuchAlgorithmException {
+	private static SecretKeySpec generateKey(String algorithm) throws NoSuchAlgorithmException {
 		KeyGenerator generator;
 		generator = KeyGenerator.getInstance(algorithm);
 
@@ -78,7 +79,7 @@ public class KeyStoreManager {
 		default:
 			break;
 		}
-		return generator.generateKey();
+		return (SecretKeySpec) generator.generateKey();
 	}
 
 	private static void storeKey(KeyStore keyStore, SecretKey key, String algorithm) throws KeyStoreException,
