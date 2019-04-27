@@ -45,6 +45,7 @@ public class IvGenerator {
 			return generate16ByteIV();
 		case "DES":
 		case "DESede":
+		case "blowfish":
 		default:
 			return generate8ByteIV();
 		}
